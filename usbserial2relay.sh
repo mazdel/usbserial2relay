@@ -5,7 +5,9 @@ HEX_OFF='\xA0\x01\x00\xA1'
 
 DEVICE="/dev/ttyUSB0"
 STATE="ON"
-LOGFILE="$(pwd)/state.log"
+DIRNAME=$(dirname -- "$0")
+LOGFILE="$DIRNAME/state.log"
+timestamp=$(date +"%FT%H-%M-%S")
 
 usage() {
     cat <<EOF
@@ -26,6 +28,15 @@ Example: $0 -d /dev/ttyUSB1 -s on
 EOF
     exit 1
 }
+recycleLog() {
+    local lines
+    local logs
+    lines=$(wc -l <"$LOGFILE")
+    if [ "$lines" -gt 500 ]; then
+        logs=$(tail -n 500 "$LOGFILE")
+        echo -e "$logs" >"$LOGFILE"
+    fi
+}
 sendCmd() {
     local device="$1"
     local switch_act="$2"
@@ -43,7 +54,6 @@ saveState() {
     local device="$1"
     local state="$2"
 
-    timestamp=$(date +"%FT%H-%M-%S")
     if [ ! -f "${LOGFILE}" ]; then
         touch "${LOGFILE}"
     fi
@@ -57,15 +67,17 @@ getLog() {
     local line=0
 
     if [ ! -f "${LOGFILE}" ]; then
-        touch "${LOGFILE}"
+        echo "$timestamp - can not read logfile : ${LOGFILE}"
         exit 1
     fi
+
+    # shellcheck disable=SC2002
     cat "${LOGFILE}" | tac | while read -r state; do
         # stateArr=(${state//:/ })
         IFS=':' read -r -a stateArr <<<"${state}"
 
         if [ "${stateArr[1]}" == "${DEVICE}" ]; then
-            line=$(($line + 1))
+            line=$((line + 1))
             echo "${state}"
         fi
         if [ "$line" == "$lines" ]; then
@@ -79,7 +91,7 @@ switch() {
     local savingState=${3:-"yes"}
 
     if [ ! -c "$device" ]; then
-        echo -e "\ndevice $device (tty) is not exist!"
+        echo -e "\n$timestamp - device $device (tty) is not exist!"
         usage
         exit 1
     fi
@@ -100,13 +112,19 @@ switch() {
         fi
         ;;
     *)
-        echo -e "\nwrong switch state"
+        echo -e "\n$timestamp - wrong switch state"
         usage
         exit 1
         ;;
     esac
 }
 persistent() {
+    if [ ! -f "${LOGFILE}" ]; then
+        echo -e "\n$timestamp - can not read logfile : ${LOGFILE}\n"
+        usage
+        exit 1
+    fi
+
     local -r log=$(getLog 1)
 
     IFS=':' read -r -a state <<<"${log}"
