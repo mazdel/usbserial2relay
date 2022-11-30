@@ -137,7 +137,7 @@ main() {
         d) DEVICE=${OPTARG} ;;
         f) LOGFILE=${OPTARG} ;;
         h) usage ;;
-        l) getLog 10 && exit 1 ;; #TODO <-- make getLog lines more flexible
+        l) getLog 10 && exit ;; #TODO <-- make getLog lines more flexible
         p) persistent ;;
         s) STATE=${OPTARG} ;;
         *) usage ;;
