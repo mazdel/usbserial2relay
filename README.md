@@ -20,4 +20,5 @@ Available options :
 -l  : get log of last 10 states
 -p  : Switch relay device to the last known state.
 -s  : Device state. default : on
+-r  : Recycle Log to only 500 lines
 ```
