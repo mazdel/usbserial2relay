@@ -19,6 +19,7 @@ Available options :
     -l  : get log of last 10 states
     -p  : Switch relay device to the last known state.
     -s  : Device state. default : on
+    -r  : Recycle Log to only 500 lines
     
 
 Usage: $0 -f ./state.log -d <path_to_tty_device> -s <on|off> 
@@ -132,7 +133,7 @@ persistent() {
     exit 1
 }
 main() {
-    while getopts hd:s:f:pl flag; do
+    while getopts hd:s:f:plr flag; do
         case "${flag}" in
         d) DEVICE=${OPTARG} ;;
         f) LOGFILE=${OPTARG} ;;
@@ -140,6 +141,7 @@ main() {
         l) getLog 10 && exit ;; #TODO <-- make getLog lines more flexible
         p) persistent ;;
         s) STATE=${OPTARG} ;;
+        r) recycleLog && exit ;;
         *) usage ;;
         esac
     done
